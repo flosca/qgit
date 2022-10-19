@@ -5,6 +5,10 @@
   "productName": "QGit",
   "author": "Vladislav Skukov",
   "private": true,
+  "browser": {
+    "fs": false,
+    "child_process": false
+  },
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
     "format": "prettier --write \"**/*.{js,ts,vue,,html,md,json}\" --ignore-path .gitignore",
@@ -12,10 +16,12 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "child_process": "^1.0.2",
     "core-js": "^3.6.5",
+    "fs": "^0.0.1-security",
     "pinia": "^2.0.11",
     "quasar": "^2.6.0",
-    "simple-git": "^3.7.1",
+    "simple-git": "^3.14.1",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"
   },

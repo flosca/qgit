@@ -15,3 +15,23 @@
  *     doAThing: () => {}
  *   })
  */
+ import { contextBridge } from 'electron'
+ import simpleGit, { CleanOptions } from 'simple-git';
+
+ contextBridge.exposeInMainWorld('gitAPI', {
+    seeLog: async () => {
+        const options = {
+            baseDir: 'c:/work/soma-chrome',
+            binary: 'git',
+            maxConcurrentProcesses: 6,
+           };  
+           const git = simpleGit(options).clean(CleanOptions.FORCE);
+         
+           const log = await git.log()
+         
+           console.warn(log)
+         
+           return log.all;
+
+    }
+  })
