@@ -1,6 +1,8 @@
 <template>
   <q-page class="row">
-    <commits-page/>
+    <commits-page
+        title="Commits Page"
+      />
   </q-page>
 </template>
 

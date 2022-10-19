@@ -33,5 +33,15 @@
          
            return log.all;
 
+    },
+    fetchCommits: async (folderName) => {
+        const options = {
+            baseDir: folderName,
+            binary: 'git',
+            maxConcurrentProcesses: 6,
+           };  
+           const git = simpleGit(options).clean(CleanOptions.FORCE);
+           const log = await git.log()         
+           return log.all;
     }
   })

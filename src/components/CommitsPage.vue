@@ -1,30 +1,36 @@
 <template>
-  <div>
-    <q-btn color="primary" label="Load commits" @click="seeLog"/>
+  <div class="q-pa-md">
     <q-table
+      :title="folderName"
       :rows="commits"
+      :dense="$q.screen.md"
       :columns="columns"
-      row-key="message"
+      row-key="hash"
       virtual-scroll
       v-model:pagination="pagination"
       :rows-per-page-options="[0]"
-    />
+      hide-header
+    >
+      <template v-slot:top-left>
+        <q-input borderless dense v-model="folderName" placeholder="Open repository"/>
+        <q-btn color="primary" label="Load commits" @click="openRepository"/>
+      </template>
+    </q-table>
   </div>
 </template>
 
 <script lang="ts">
 import { DefaultLogFields, ListLogLine } from 'simple-git';
-import { defineComponent, PropType } from 'vue';
-import { Todo, Meta } from './models';
+import { defineComponent } from 'vue';
+
+interface IGitApi {
+  fetchCommits(folderName: string): Promise<(DefaultLogFields & ListLogLine)[]>
+}
 
 declare global {
   interface Window {
     gitAPI: IGitApi
   }
-}
-
-interface IGitApi {
-  seeLog(): Promise<(DefaultLogFields & ListLogLine)[]>
 }
 
 export default defineComponent({
@@ -34,21 +40,12 @@ export default defineComponent({
       type: String,
       required: true
     },
-    todos: {
-      type: Array as PropType<Todo[]>,
-      default: () => [] as Todo[]
-    },
-    meta: {
-      type: Object as PropType<Meta>,
-      required: true
-    },
-    active: {
-      type: Boolean
-    }
+
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data(): { commits: (DefaultLogFields & ListLogLine)[], columns: any, pagination: any} {
+  data(): { folderName: string, commits: (DefaultLogFields & ListLogLine)[], columns: any, pagination: any} {
     return {
+      folderName: '',
       commits: [],
       columns: [
         { name: 'message', label: 'Message', field: 'message', align: 'left'},
@@ -67,8 +64,8 @@ export default defineComponent({
     }
   },
   methods: {
-    async seeLog(): Promise<void> {
-      this.commits = await window.gitAPI.seeLog()
+    async openRepository(): Promise<void> {
+      this.commits = await window.gitAPI.fetchCommits(this.folderName)
     }
   },
   computed: {
