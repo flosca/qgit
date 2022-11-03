@@ -69,6 +69,7 @@
 
 <script lang="ts">
 import { DefaultLogFields, ListLogLine } from 'simple-git';
+import { formatDistance, parseISO } from 'date-fns';
 import { IGitApi } from 'src/models/iGitApi';
 import { IFileWatcherApi } from 'src/models/iFileWatcherApi';
 import { defineComponent } from 'vue';
@@ -108,8 +109,18 @@ export default defineComponent({
       commits: [],
       columns: [
         { name: 'message', label: 'Message', field: 'message', align: 'left' },
-        { name: 'date', label: 'Commit date hellow', field: 'date' },
-        { name: 'hash', label: 'Commit hash', field: 'hash' },
+        {
+          name: 'date',
+          label: 'Commit date',
+          field: 'date',
+          format: (val: string) => this.formatCommitDate(val),
+        },
+        {
+          name: 'hash',
+          label: 'Commit hash',
+          field: 'hash',
+          format: (val: string) => val.substring(0, 7),
+        },
         {
           name: 'author_name',
           label: 'Author',
@@ -143,6 +154,9 @@ export default defineComponent({
       await window.gitAPI.stageAllFiles(this.folderName);
       await this.setCurrentDiff();
       this.hasStagedFiles = true;
+    },
+    formatCommitDate(date: string): string {
+      return formatDistance(parseISO(date), new Date(), { addSuffix: true });
     },
   },
   computed: {
