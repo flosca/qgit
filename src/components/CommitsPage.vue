@@ -1,70 +1,68 @@
 <template>
-  <div>
-    <div class="row justify-start">
-      <div class="col-6">
-        <q-table
-          :title="folderName"
-          :rows="commits"
-          :dense="$q.screen.md"
-          :columns="columns"
-          row-key="hash"
-          virtual-scroll
-          :virtual-scroll-sticky-size-start="48"
-          v-model:pagination="pagination"
-          :rows-per-page-options="[0]"
-          hide-header
-          elevation="0"
-        >
-          <template v-slot:top-left>
-            <q-input
-              borderless
-              dense
-              v-model="folderName"
-              placeholder="Type repository path..."
-            />
+  <div class="full-width row">
+    <div class="col-grow">
+      <q-table
+        :title="folderName"
+        :rows="commits"
+        :dense="$q.screen.md"
+        :columns="columns"
+        row-key="hash"
+        virtual-scroll
+        :virtual-scroll-sticky-size-start="48"
+        v-model:pagination="pagination"
+        :rows-per-page-options="[0]"
+        hide-header
+        elevation="0"
+      >
+        <template v-slot:top-left>
+          <q-input
+            borderless
+            dense
+            v-model="folderName"
+            placeholder="Type repository path..."
+          />
+          <q-btn
+            color="primary"
+            outline
+            no-caps
+            label="Open repository"
+            @click="openRepository"
+          />
+        </template>
+      </q-table>
+    </div>
+    <div class="col-grow">
+      <q-card>
+        <div class="column">
+          <div class="col">
+            <q-input v-model="commitMessage" label="Commit Message" />
             <q-btn
               color="primary"
               outline
               no-caps
-              label="Open repository"
-              @click="openRepository"
+              :disable="!canCommit"
+              label="Commit"
+              @click="commit"
             />
-          </template>
-        </q-table>
-      </div>
-      <div class="col-6 pl-2">
-        <q-card>
-          <div class="column" style="height: 250px">
-            <div class="col">
-              <q-input v-model="commitMessage" label="Commit Message" />
-              <q-btn
-                color="primary"
-                outline
-                no-caps
-                :disable="!canCommit"
-                label="Commit"
-                @click="commit"
-              />
-            </div>
-            <div class="col-8">
-              <q-input
-                v-model="currentDiff"
-                type="textarea"
-                readonly
-                label="Current diff"
-              />
-              <q-btn
-                v-if="currentDiff !== ''"
-                color="grey"
-                outline
-                no-caps
-                label="Stage all files"
-                @click="stageAllFiles"
-              />
-            </div>
           </div>
-        </q-card>
-      </div>
+          <div class="col-8">
+            <q-input
+              v-model="currentDiff"
+              type="textarea"
+              readonly
+              label="Current diff"
+            />
+            <q-btn
+              v-if="currentDiff !== ''"
+              color="grey"
+              outline
+              no-caps
+              label="Stage all files"
+              @click="stageAllFiles"
+            />
+          </div>
+        </div>
+      </q-card>
     </div>
   </div>
 </template>
