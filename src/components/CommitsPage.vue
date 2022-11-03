@@ -22,6 +22,7 @@
             placeholder="Type repository path..."
           />
           <q-btn
+            v-if="this.currentFolderName !== this.folderName"
             color="primary"
             outline
             no-caps
@@ -31,27 +32,24 @@
         </template>
       </q-table>
     </div>
-    <div class="col-grow">
+    <div class="col-grow" style="height: 100vh">
       <q-card>
         <div class="column">
           <div class="col">
             <q-input v-model="commitMessage" label="Commit Message" />
             <q-btn
+              v-if="canCommit"
               color="primary"
               outline
               no-caps
-              :disable="!canCommit"
               label="Commit"
               @click="commit"
             />
           </div>
           <div class="col-8">
-            <q-input
-              v-model="currentDiff"
-              type="textarea"
-              readonly
-              label="Current diff"
-            />
+            <q-scroll-area style="height: 200px; max-width: 300px">
+              <div v-html="currentDiff" />
+            </q-scroll-area>
             <q-btn
               v-if="currentDiff !== ''"
               color="grey"
@@ -70,8 +68,8 @@
 <script lang="ts">
 import { DefaultLogFields, ListLogLine } from 'simple-git';
 import { formatDistance, parseISO } from 'date-fns';
-import { IGitApi } from 'src/models/iGitApi';
-import { IFileWatcherApi } from 'src/models/iFileWatcherApi';
+import { IGitApi } from 'src/models/api/iGitApi';
+import { IFileWatcherApi } from 'src/models/api/iFileWatcherApi';
 import { defineComponent } from 'vue';
 
 declare global {
@@ -92,6 +90,7 @@ export default defineComponent({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data(): {
     folderName: string;
+    currentFolderName: string;
     commitMessage: string;
     currentDiff: string;
     hasStagedFiles: boolean;
@@ -103,6 +102,7 @@ export default defineComponent({
   } {
     return {
       folderName: '',
+      currentFolderName: '',
       commitMessage: '',
       currentDiff: '',
       hasStagedFiles: false,
@@ -134,24 +134,26 @@ export default defineComponent({
   },
   methods: {
     async setCurrentDiff() {
-      this.currentDiff = await window.gitAPI.showDiff(this.folderName);
+      const diff = await window.gitAPI.showDiff(this.currentFolderName);
+      this.currentDiff = diff.replace(/(?:\r\n|\r|\n)/g, '<br/>');
     },
     async openRepository(): Promise<void> {
-      this.commits = await window.gitAPI.fetchCommits(this.folderName);
+      this.currentFolderName = this.folderName;
+      this.commits = await window.gitAPI.fetchCommits(this.currentFolderName);
       await this.setCurrentDiff();
       window.fileWatcherAPI.createWatcher(
-        this.folderName,
+        this.currentFolderName,
         async () => await this.setCurrentDiff()
       );
     },
     async commit(): Promise<void> {
       if (!this.canCommit) return;
-      await window.gitAPI.commit(this.folderName, this.commitMessage);
+      await window.gitAPI.commit(this.currentFolderName, this.commitMessage);
       this.commits = await window.gitAPI.fetchCommits(this.folderName);
       this.commitMessage = '';
     },
     async stageAllFiles(): Promise<void> {
-      await window.gitAPI.stageAllFiles(this.folderName);
+      await window.gitAPI.stageAllFiles(this.currentFolderName);
       await this.setCurrentDiff();
       this.hasStagedFiles = true;
     },
