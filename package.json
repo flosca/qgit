@@ -17,6 +17,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "child_process": "^1.0.2",
+    "chokidar": "^3.5.3",
     "core-js": "^3.6.5",
     "fs": "^0.0.1-security",
     "pinia": "^2.0.11",
