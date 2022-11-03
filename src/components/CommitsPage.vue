@@ -21,11 +21,9 @@
 
 <script lang="ts">
 import { DefaultLogFields, ListLogLine } from 'simple-git';
+import { IGitApi } from 'src/models/iGitApi';
 import { defineComponent } from 'vue';
 
-interface IGitApi {
-  fetchCommits(folderName: string): Promise<(DefaultLogFields & ListLogLine)[]>
-}
 
 declare global {
   interface Window {
@@ -53,7 +51,6 @@ export default defineComponent({
         { name: 'hash', label: 'Commit hash', field: 'hash' },
         {
           name: 'author_name',
-          required: true,
           label: 'Author',
           field: 'author_name',
         },
@@ -66,6 +63,7 @@ export default defineComponent({
   methods: {
     async openRepository(): Promise<void> {
       this.commits = await window.gitAPI.fetchCommits(this.folderName)
+      console.log(await window.gitAPI.showDiff(this.folderName))
     }
   },
   computed: {
