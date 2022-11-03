@@ -1,0 +1,61 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "editor.bracketPairColorization.enabled": true,
+        "editor.guides.bracketPairs": "active",
+        "editor.wordWrap": "on",
+        "editor.wordWrapColumn": 80,
+        "typescript.suggest.paths": true,
+        "typescript.suggest.autoImports": true,
+        "typescript.updateImportsOnFileMove.enabled": "always"
+        // Files
+        "files.exclude": {
+          "**/*.log": true,
+          "**/*.log*": true,
+          "**/dist": true,
+          "**/coverage": true
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/bower_components": true,
+          "**/.nuxt": true,
+          "**/coverage": true,
+          "**/dist": true
+        },
+        // Defaults override:
+        "vetur.validation.script": true,
+        "vetur.validation.style": true,
+        "vetur.validation.template": false,
+        "vetur.experimental.templateInterpolationService": true,
+        "vetur.grammar.customBlocks": {
+          "docs": "md",
+          "i18n": "json",
+          "router": "js"
+        },
+        "json.format.enable": true,
+        "javascript.validate.enable": true,
+        // Disables default checks:
+        "css.validate": false,
+        "less.validate": false,
+        "scss.validate": false,
+        // Linting:
+        "eslint.enable": true,
+        "stylelint.enable": true,
+        // Testing:
+        "jest.autoEnable": false,
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true,
+        },
+        "eslint.alwaysShowStatus": true,
+        "eslint.validate": [
+          "jade",
+          "scss",
+          "sass"
+        ]
+      }
+}
