@@ -66,8 +66,8 @@
               color="grey"
               outline
               no-caps
-              label="Stage all files"
-              @click="stageAllFiles"
+              label="Reset all files"
+              @click="resetAllFiles"
             />
           </div>
         </div>
@@ -236,10 +236,9 @@ export default defineComponent({
       this.commits = await window.gitAPI.fetchCommits(this.folderName);
       this.commitMessage = '';
     },
-    async stageAllFiles(): Promise<void> {
-      await window.gitAPI.stageAllFiles(this.currentFolderName);
+    async resetAllFiles(): Promise<void> {
+      await window.gitAPI.resetAllFiles(this.currentFolderName);
       await this.setCurrentDiff();
-      this.hasStagedFiles = true;
     },
   },
   computed: {

@@ -44,6 +44,16 @@
        return await git.add('.') 
     },
 
+    resetAllFiles: async (folderName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       return await git.reset(['--hard']) 
+    },    
+
     commit: async (folderName, message) => {
       const options = {
         baseDir: folderName,

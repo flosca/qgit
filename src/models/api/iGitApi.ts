@@ -7,6 +7,7 @@ export interface IGitApi {
   showDiff(folderName: string): Promise<string>
   getCurrentDiffLines(folderName: string): Promise<string[]>
   stageAllFiles(folderName: string): Promise<string>
+  resetAllFiles(folderName: string): Promise<void>
   commit(folderName: string, message: string): Promise<void>
   showCurrentBranchName(folderName: string): Promise<string>
   listAllBranches(folderName: string): Promise<string[]>
