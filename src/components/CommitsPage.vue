@@ -71,6 +71,8 @@ import { formatDistance, parseISO } from 'date-fns';
 import { IGitApi } from 'src/models/api/iGitApi';
 import { IFileWatcherApi } from 'src/models/api/iFileWatcherApi';
 import { defineComponent } from 'vue';
+import { useRepositoryPathStore } from 'src/stores/repository-store';
+import { mapWritableState } from 'pinia';
 
 declare global {
   interface Window {
@@ -132,6 +134,10 @@ export default defineComponent({
       },
     };
   },
+  mounted: async function () {
+    this.currentFolderName = this.path ?? '';
+    if (this.currentFolderName !== '') await this.openRepository();
+  },
   methods: {
     async setCurrentDiff() {
       const diff = await window.gitAPI.showDiff(this.currentFolderName);
@@ -139,6 +145,9 @@ export default defineComponent({
     },
     async openRepository(): Promise<void> {
       this.currentFolderName = this.folderName;
+      const store = useRepositoryPathStore();
+      store.$patch({ path: this.currentFolderName });
+
       this.commits = await window.gitAPI.fetchCommits(this.currentFolderName);
       await this.setCurrentDiff();
       window.fileWatcherAPI.createWatcher(
@@ -165,6 +174,7 @@ export default defineComponent({
     canCommit(): boolean {
       return this.commitMessage !== '' && this.currentDiff !== '';
     },
+    ...mapWritableState(useRepositoryPathStore, ['path']),
   },
 });
 </script>
