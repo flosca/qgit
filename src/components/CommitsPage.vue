@@ -12,28 +12,37 @@
         v-model:pagination="pagination"
         :rows-per-page-options="[0]"
         hide-header
+        flat
         elevation="0"
       >
         <template v-slot:top-left>
-          <q-input
-            borderless
-            dense
-            v-model="folderName"
-            placeholder="Type repository path..."
-          />
-          <q-btn
-            v-if="this.currentFolderName !== this.folderName"
-            color="primary"
-            outline
-            no-caps
-            label="Open repository"
-            @click="openRepository"
-          />
+          <div class="row">
+            <q-input
+              borderless
+              dense
+              v-model="folderName"
+              placeholder="Type repository path..."
+            />
+            <q-btn
+              v-if="this.currentFolderName !== this.folderName"
+              color="primary"
+              outline
+              no-caps
+              label="Open repository"
+              @click="openRepository"
+            />
+          </div>
+          <div class="row">
+            <span v-if="currentFolderName !== ''">
+              Current branch is: {{ currentBranchName }}</span
+            >
+            <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
+          </div>
         </template>
       </q-table>
     </div>
-    <div class="col-grow" style="height: 100vh">
-      <q-card>
+    <div class="col-grow">
+      <q-card flat>
         <div class="column">
           <div class="col">
             <q-input v-model="commitMessage" label="Commit Message" />
@@ -73,6 +82,7 @@ import { IFileWatcherApi } from 'src/models/api/iFileWatcherApi';
 import { defineComponent } from 'vue';
 import { useRepositoryPathStore } from 'src/stores/repository-store';
 import { mapWritableState } from 'pinia';
+import { TableColumn } from 'src/models/tableColumn';
 
 declare global {
   interface Window {
@@ -95,10 +105,13 @@ export default defineComponent({
     currentFolderName: string;
     commitMessage: string;
     currentDiff: string;
+    currentDiffLines: string[];
     hasStagedFiles: boolean;
+    currentBranchName: string;
+    allBranches: string[];
     commits: (DefaultLogFields & ListLogLine)[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    columns: any;
+    columns: TableColumn[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pagination: any;
   } {
@@ -107,26 +120,45 @@ export default defineComponent({
       currentFolderName: '',
       commitMessage: '',
       currentDiff: '',
+      currentDiffLines: [],
       hasStagedFiles: false,
+      currentBranchName: '',
+      allBranches: [],
       commits: [],
       columns: [
-        { name: 'message', label: 'Message', field: 'message', align: 'left' },
+        {
+          name: 'message',
+          label: 'Message',
+          field: 'message',
+          align: 'left',
+          style: 'max-width: 150px',
+          headerStyle: 'max-width: 150px',
+          classes: 'bg-grey-2 ellipsis',
+        },
         {
           name: 'date',
           label: 'Commit date',
           field: 'date',
-          format: (val: string) => this.formatCommitDate(val),
+          style: 'max-width: 80px',
+          headerStyle: 'max-width: 80px',
+          format: (val: string) => {
+            return this.formatCommitDate(val);
+          },
         },
         {
           name: 'hash',
           label: 'Commit hash',
           field: 'hash',
+          style: 'max-width: 50px',
+          headerStyle: 'max-width: 50px',
           format: (val: string) => val.substring(0, 7),
         },
         {
           name: 'author_name',
           label: 'Author',
           field: 'author_name',
+          style: 'max-width: 100px',
+          headerStyle: 'max-width: 100px',
         },
       ],
       pagination: {
@@ -140,9 +172,20 @@ export default defineComponent({
     if (this.currentFolderName !== '') await this.openRepository();
   },
   methods: {
+    ctrlBHandler() {
+      console.log('shortcut clicked!');
+    },
+    formatCommitDate(date: string): string {
+      return formatDistance(parseISO(date), new Date(), { addSuffix: true });
+    },
     async setCurrentDiff() {
       const diff = await window.gitAPI.showDiff(this.currentFolderName);
       this.currentDiff = diff.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+
+      const diffLines = await window.gitAPI.getCurrentDiffLines(
+        this.currentFolderName
+      );
+      this.currentDiffLines = diffLines ?? [];
     },
     async openRepository(): Promise<void> {
       if (this.currentFolderName === '' && this.folderName === '') return;
@@ -157,6 +200,12 @@ export default defineComponent({
       store.$patch({ path: this.currentFolderName });
 
       this.commits = await window.gitAPI.fetchCommits(this.currentFolderName);
+      this.currentBranchName = await window.gitAPI.showCurrentBranchName(
+        this.currentFolderName
+      );
+      this.allBranches = await window.gitAPI.listAllBranches(
+        this.currentFolderName
+      );
       if (this.folderName === '' && this.currentFolderName !== '')
         this.folderName = this.currentFolderName;
       await this.setCurrentDiff();
@@ -175,9 +224,6 @@ export default defineComponent({
       await window.gitAPI.stageAllFiles(this.currentFolderName);
       await this.setCurrentDiff();
       this.hasStagedFiles = true;
-    },
-    formatCommitDate(date: string): string {
-      return formatDistance(parseISO(date), new Date(), { addSuffix: true });
     },
   },
   computed: {

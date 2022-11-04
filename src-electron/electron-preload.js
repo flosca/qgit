@@ -23,6 +23,17 @@
        return await git.diff()         
     },
 
+    getCurrentDiffLines: async (folderName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const diff = await git.diff();
+       return diff.split('\n')
+    },
+
     stageAllFiles: async (folderName) => {
       const options = {
         baseDir: folderName,
@@ -44,6 +55,27 @@
         '--all': null
       });
     },
+
+    showCurrentBranchName: async (folderName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       return await git.raw(['rev-parse', '--abbrev-ref', 'HEAD'])
+    },
+
+    listAllBranches: async (folderName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const branchNamesByNewLine = await git.raw(['for-each-ref', '--format=\'%(refname:short)\'', 'refs/heads/'])
+       return branchNamesByNewLine.split('\n');
+    }
   })
 
 contextBridge.exposeInMainWorld('fileWatcherAPI', {

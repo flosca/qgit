@@ -1,7 +1,7 @@
 <template>
   <q-page class="col">
     <q-tabs v-model="tab" no-caps class="shadow-2">
-      <q-tab name="commits" label="Main" />
+      <q-tab name="commits" label="Repository" />
       <q-tab name="settings" label="Settings" />
     </q-tabs>
     <q-separator />
