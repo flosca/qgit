@@ -1,5 +1,5 @@
  import { contextBridge } from 'electron'
- import simpleGit, { CleanOptions } from 'simple-git';
+ import simpleGit from 'simple-git';
 
  contextBridge.exposeInMainWorld('gitAPI', {
     fetchCommits: async (folderName) => {
@@ -8,7 +8,7 @@
           binary: 'git',
           maxConcurrentProcesses: 6,
          };  
-         const git = simpleGit(options).clean(CleanOptions.FORCE);
+         const git = simpleGit(options);
          const log = await git.log()         
          return log.all;
     },
@@ -19,7 +19,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        return await git.diff()         
     },
 
@@ -29,7 +29,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        const diff = await git.diff();
        return diff.split('\n')
     },
@@ -40,7 +40,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        return await git.add('.') 
     },
 
@@ -50,7 +50,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        return await git.reset(['--hard']) 
     },    
 
@@ -60,7 +60,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        await git.commit(message, {
         '--all': null
       });
@@ -72,7 +72,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        return await git.raw(['rev-parse', '--abbrev-ref', 'HEAD'])
     },
 
@@ -82,7 +82,7 @@
         binary: 'git',
         maxConcurrentProcesses: 6,
        };  
-       const git = simpleGit(options).clean(CleanOptions.FORCE);
+       const git = simpleGit(options);
        const branchNamesByNewLine = await git.raw(['for-each-ref', '--format=\'%(refname:short)\'', 'refs/heads/'])
        return branchNamesByNewLine.split('\n');
     }
