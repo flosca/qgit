@@ -1,45 +1,45 @@
 <template>
   <div class="full-width row">
     <div class="col-grow">
-      <q-table
-        :title="folderName"
-        :rows="commits"
-        :dense="$q.screen.md"
-        :columns="columns"
-        row-key="hash"
-        virtual-scroll
-        :virtual-scroll-sticky-size-start="48"
-        v-model:pagination="pagination"
-        :rows-per-page-options="[0]"
-        hide-header
-        flat
-        elevation="0"
-      >
-        <template v-slot:top-left>
-          <div class="row">
-            <q-input
-              borderless
-              dense
-              v-model="folderName"
-              placeholder="Type repository path..."
-            />
-            <q-btn
-              v-if="this.currentFolderName !== this.folderName"
-              color="primary"
-              outline
-              no-caps
-              label="Open repository"
-              @click="openRepository"
-            />
-          </div>
-          <div class="row">
-            <span v-if="currentFolderName !== ''">
-              Current branch is: {{ currentBranchName }}</span
-            >
-            <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
-          </div>
-        </template>
-      </q-table>
+      <q-scroll-area style="height: 80vh; width: 55vw">
+        <q-table
+          :title="folderName"
+          :rows="commits"
+          :dense="$q.screen.md"
+          :columns="columns"
+          row-key="hash"
+          v-model:pagination="pagination"
+          :rows-per-page-options="[0]"
+          hide-header
+          flat
+          elevation="0"
+        >
+          <template v-slot:top-left>
+            <div class="row">
+              <q-input
+                borderless
+                dense
+                v-model="folderName"
+                placeholder="Type repository path..."
+              />
+              <q-btn
+                v-if="this.currentFolderName !== this.folderName"
+                color="primary"
+                outline
+                no-caps
+                label="Open repository"
+                @click="openRepository"
+              />
+            </div>
+            <div class="row">
+              <span v-if="currentFolderName !== ''">
+                Current branch is: {{ currentBranchName }}</span
+              >
+              <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
+            </div>
+          </template>
+        </q-table>
+      </q-scroll-area>
     </div>
     <div class="col-grow">
       <q-card flat>
@@ -56,7 +56,7 @@
             />
           </div>
           <div class="col-8">
-            <q-scroll-area style="height: 400px; min-width: 300px">
+            <q-scroll-area style="height: 60vh; width: 40vw">
               <div v-for="line in currentDiffLines" :key="line.id">
                 <div :style="line.style">{{ line.value }}</div>
               </div>
