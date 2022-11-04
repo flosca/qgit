@@ -24,6 +24,7 @@
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^2.3.0",
     "quasar": "^2.6.0",
+    "shortcuts": "^1.8.1",
     "simple-git": "^3.14.1",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"

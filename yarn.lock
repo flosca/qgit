@@ -6124,6 +6124,11 @@ shell-quote@^1.6.1:
   resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.7.3.tgz#aa40edac170445b9a431e17bb62c0b881b9c4123"
   integrity sha512-Vpfqwm4EnqGdlsBFNmHhxhElJYrdfcxPThu+ryKS5J8L/fhAwLazFZtq+S+TWZ9ANj2piSQLGj6NQg+lKPmxrw==
 
+shortcuts@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/shortcuts/-/shortcuts-1.8.1.tgz#821b3a733253c121c461a5f36e8afce16d394a7b"
+  integrity sha512-2AURf/O3BbPHuzLtnnzrF/mXut8xZy3oneFTGjvXPQn1+apw1cBpy1+493NEKab+yO8ND3rbCdD7uVK+J2C93A==
+
 side-channel@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/side-channel/-/side-channel-1.0.4.tgz#efce5c8fdc104ee751b25c58d4290011fa5ea2cf"
