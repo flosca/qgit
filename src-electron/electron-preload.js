@@ -93,13 +93,14 @@ contextBridge.exposeInMainWorld('fileWatcherAPI', {
       const chokidar = require('chokidar');
       const watcher = chokidar.watch(folderName, {
         ignoreInitial: true,
-        ignored: ['/node_modules/']// todo extend with.gitignore
+        ignored: ['/node_modules/']// todo extend with .gitignore
       })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      watcher.on('change', (path, stats) => {
-        console.log(path, stats)
-        action()
+      watcher.on('change', async (path) => {
+        await action();
       })
+
+      return watcher
     }
   })  
