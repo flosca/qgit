@@ -56,8 +56,10 @@
             />
           </div>
           <div class="col-8">
-            <q-scroll-area style="height: 200px; max-width: 300px">
-              <div v-html="currentDiff" />
+            <q-scroll-area style="height: 400px; min-width: 300px">
+              <div v-for="line in currentDiffLines" :key="line.id">
+                <div :style="line.style">{{ line.value }}</div>
+              </div>
             </q-scroll-area>
             <q-btn
               v-if="currentDiff !== ''"
@@ -83,6 +85,7 @@ import { defineComponent } from 'vue';
 import { useRepositoryPathStore } from 'src/stores/repository-store';
 import { mapWritableState } from 'pinia';
 import { TableColumn } from 'src/models/tableColumn';
+import { DiffLine } from 'src/models/diffLine';
 
 declare global {
   interface Window {
@@ -105,7 +108,7 @@ export default defineComponent({
     currentFolderName: string;
     commitMessage: string;
     currentDiff: string;
-    currentDiffLines: string[];
+    currentDiffLines: DiffLine[];
     hasStagedFiles: boolean;
     currentBranchName: string;
     allBranches: string[];
@@ -172,8 +175,20 @@ export default defineComponent({
     if (this.currentFolderName !== '') await this.openRepository();
   },
   methods: {
-    ctrlBHandler() {
-      console.log('shortcut clicked!');
+    formatDiffLine(id: number, value: string): DiffLine {
+      return {
+        id,
+        value,
+        style: value.startsWith('+')
+          ? 'color:green'
+          : value.startsWith('-')
+          ? 'color:red'
+          : value.startsWith('@@')
+          ? 'color: blue'
+          : value.startsWith('diff --git')
+          ? 'color:gray'
+          : '',
+      };
     },
     formatCommitDate(date: string): string {
       return formatDistance(parseISO(date), new Date(), { addSuffix: true });
@@ -185,7 +200,8 @@ export default defineComponent({
       const diffLines = await window.gitAPI.getCurrentDiffLines(
         this.currentFolderName
       );
-      this.currentDiffLines = diffLines ?? [];
+      this.currentDiffLines =
+        diffLines?.map((line, i) => this.formatDiffLine(i, line)) ?? [];
     },
     async openRepository(): Promise<void> {
       if (this.currentFolderName === '' && this.folderName === '') return;
