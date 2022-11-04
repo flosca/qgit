@@ -136,6 +136,7 @@ export default defineComponent({
   },
   mounted: async function () {
     this.currentFolderName = this.path ?? '';
+    console.log(this.currentFolderName);
     if (this.currentFolderName !== '') await this.openRepository();
   },
   methods: {
@@ -144,11 +145,20 @@ export default defineComponent({
       this.currentDiff = diff.replace(/(?:\r\n|\r|\n)/g, '<br/>');
     },
     async openRepository(): Promise<void> {
-      this.currentFolderName = this.folderName;
+      if (this.currentFolderName === '' && this.folderName === '') return;
+      if (
+        this.currentFolderName === '' ||
+        (!!this.folderName && this.currentFolderName !== this.folderName)
+      )
+        this.currentFolderName = this.folderName;
+
+      if (this.currentFolderName === '') return;
       const store = useRepositoryPathStore();
       store.$patch({ path: this.currentFolderName });
 
       this.commits = await window.gitAPI.fetchCommits(this.currentFolderName);
+      if (this.folderName === '' && this.currentFolderName !== '')
+        this.folderName = this.currentFolderName;
       await this.setCurrentDiff();
       window.fileWatcherAPI.createWatcher(
         this.currentFolderName,
