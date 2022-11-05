@@ -1,9 +1,8 @@
-import type { DefaultLogFields, ListLogLine } from 'simple-git'
-
-export type CommitHistoryRow = DefaultLogFields & ListLogLine
+import { CommitRow } from '../commitRow'
 
 export interface IGitApi {
-  fetchCommits(folderName: string): Promise<CommitHistoryRow[]>
+  loadCommitHistory(folderName: string): Promise<CommitRow[]>
+  fetch(folderName: string): Promise<void>
   showDiff(folderName: string): Promise<string>
   getCurrentDiffLines(folderName: string): Promise<string[]>
   stageAllFiles(folderName: string): Promise<string>

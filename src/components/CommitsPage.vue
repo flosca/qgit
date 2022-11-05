@@ -1,42 +1,68 @@
 <template>
   <div class="full-width row">
     <div class="col-grow">
-      <q-scroll-area style="height: 80vh; width: 55vw">
+      <div class="row">
+        <q-input
+          outlined
+          dense
+          v-model="folderName"
+          placeholder="Type repository path..."
+        />
+        <q-btn
+          v-if="!!this.folderName && this.currentFolderName !== this.folderName"
+          color="primary"
+          outline
+          no-caps
+          label="Open repository"
+          @click="openRepository"
+        />
+      </div>
+      <div class="row">
+        <span v-if="currentFolderName !== ''">
+          Current branch is: {{ currentBranchName }}</span
+        >
+        <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
+      </div>
+      <div
+        class="q-pa-xs q-gutter-sm"
+        v-if="currentFolderName !== '' && currentFolderName === folderName"
+      >
+        <q-btn flat color="primary" no-caps label="Fetch" @click="fetch" />
+        <q-btn flat color="primary" no-caps label="Change branch" disable />
+        <q-btn flat color="primary" no-caps label="Manage stash" disable />
+      </div>
+      <q-scroll-area style="height: 70vh; width: 55vw">
         <q-table
-          :title="folderName"
           :rows="commits"
           :dense="$q.screen.md"
           :columns="columns"
+          :loading="commitsHistoryLoading"
           row-key="hash"
           v-model:pagination="pagination"
           :rows-per-page-options="[0]"
-          hide-header
           flat
           elevation="0"
         >
-          <template v-slot:top-left>
-            <div class="row">
-              <q-input
-                borderless
-                dense
-                v-model="folderName"
-                placeholder="Type repository path..."
-              />
-              <q-btn
-                v-if="this.currentFolderName !== this.folderName"
-                color="primary"
-                outline
-                no-caps
-                label="Open repository"
-                @click="openRepository"
-              />
-            </div>
-            <div class="row">
-              <span v-if="currentFolderName !== ''">
-                Current branch is: {{ currentBranchName }}</span
-              >
-              <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
-            </div>
+          <template v-slot:body-cell-refs="props">
+            <q-td :props="props">
+              <div v-if="!!props.value">
+                <q-chip color="green" size="xs" :label="props.value">
+                  <q-tooltip :offset="[10, 10]">
+                    {{ props.value }}
+                  </q-tooltip>
+                </q-chip>
+              </div>
+            </q-td>
+          </template>
+          <template v-slot:body-cell-message="props">
+            <q-td :props="props">
+              <div v-if="!!props.value">
+                {{ props.value }}
+                <q-tooltip :offset="[10, 10]">
+                  {{ props.value }}
+                </q-tooltip>
+              </div>
+            </q-td>
           </template>
         </q-table>
       </q-scroll-area>
@@ -77,7 +103,6 @@
 </template>
 
 <script lang="ts">
-import { DefaultLogFields, ListLogLine } from 'simple-git';
 import { formatDistance, parseISO } from 'date-fns';
 import { IGitApi } from 'src/models/api/iGitApi';
 import { IFileWatcherApi } from 'src/models/api/iFileWatcherApi';
@@ -86,6 +111,8 @@ import { useRepositoryPathStore } from 'src/stores/repository-store';
 import { mapWritableState } from 'pinia';
 import { TableColumn } from 'src/models/tableColumn';
 import { DiffLine } from 'src/models/diffLine';
+import { CommitRow } from 'src/models/commitRow';
+import { Notify } from 'quasar';
 
 declare global {
   interface Window {
@@ -112,8 +139,8 @@ export default defineComponent({
     hasStagedFiles: boolean;
     currentBranchName: string;
     allBranches: string[];
-    commits: (DefaultLogFields & ListLogLine)[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    commits: CommitRow[];
+    commitsHistoryLoading: boolean;
     columns: TableColumn[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pagination: any;
@@ -128,7 +155,16 @@ export default defineComponent({
       currentBranchName: '',
       allBranches: [],
       commits: [],
+      commitsHistoryLoading: false,
       columns: [
+        {
+          name: 'refs',
+          label: '',
+          field: 'refs',
+          style: 'max-width: 50px',
+          headerStyle: 'max-width: 50px',
+          classes: 'bg-grey-2',
+        },
         {
           name: 'message',
           label: 'Message',
@@ -142,8 +178,8 @@ export default defineComponent({
           name: 'date',
           label: 'Commit date',
           field: 'date',
-          style: 'max-width: 80px',
-          headerStyle: 'max-width: 80px',
+          style: 'max-width: 100px',
+          headerStyle: 'max-width: 100px',
           format: (val: string) => {
             return this.formatCommitDate(val);
           },
@@ -175,23 +211,49 @@ export default defineComponent({
     if (this.currentFolderName !== '') await this.openRepository();
   },
   methods: {
+    getDiffLineStyle(line: string): string {
+      const lineColours = new Map<string, string>([
+        ['+', 'green'],
+        ['-', 'red'],
+        ['@@', 'blue'],
+        ['diff --git', 'gray'],
+      ]);
+
+      for (const key of lineColours.keys()) {
+        if (line.startsWith(key)) return `color:${lineColours.get(key)}`;
+      }
+
+      return '';
+    },
     formatDiffLine(id: number, value: string): DiffLine {
       return {
         id,
         value,
-        style: value.startsWith('+')
-          ? 'color:green'
-          : value.startsWith('-')
-          ? 'color:red'
-          : value.startsWith('@@')
-          ? 'color: blue'
-          : value.startsWith('diff --git')
-          ? 'color:gray'
-          : '',
+        style: this.getDiffLineStyle(value),
       };
     },
     formatCommitDate(date: string): string {
       return formatDistance(parseISO(date), new Date(), { addSuffix: true });
+    },
+    async fetch() {
+      if (!this.currentFolderName) return;
+      await window.gitAPI.fetch(this.currentFolderName);
+      await this.updateCommitsHistory();
+    },
+    async updateCommitsHistory(): Promise<boolean> {
+      this.commitsHistoryLoading = true;
+      try {
+        this.commits = await window.gitAPI.loadCommitHistory(
+          this.currentFolderName
+        );
+      } catch (err) {
+        Notify.create('There is no repository with such path');
+        this.commitsHistoryLoading = false;
+        return false;
+      }
+
+      this.commitsHistoryLoading = false;
+      return true;
     },
     async setCurrentDiff() {
       const diff = await window.gitAPI.showDiff(this.currentFolderName);
@@ -215,7 +277,8 @@ export default defineComponent({
       const store = useRepositoryPathStore();
       store.$patch({ path: this.currentFolderName });
 
-      this.commits = await window.gitAPI.fetchCommits(this.currentFolderName);
+      if (!(await this.updateCommitsHistory())) return;
+
       this.currentBranchName = await window.gitAPI.showCurrentBranchName(
         this.currentFolderName
       );
@@ -233,7 +296,7 @@ export default defineComponent({
     async commit(): Promise<void> {
       if (!this.canCommit) return;
       await window.gitAPI.commit(this.currentFolderName, this.commitMessage);
-      this.commits = await window.gitAPI.fetchCommits(this.folderName);
+      await this.updateCommitsHistory();
       this.commitMessage = '';
     },
     async resetAllFiles(): Promise<void> {

@@ -2,17 +2,25 @@
  import simpleGit from 'simple-git';
 
  contextBridge.exposeInMainWorld('gitAPI', {
-    fetchCommits: async (folderName) => {
+    loadCommitHistory: async (folderName) => {
       const options = {
           baseDir: folderName,
           binary: 'git',
           maxConcurrentProcesses: 6,
          };  
          const git = simpleGit(options);
-         const log = await git.log()         
+         const log = await git.log({'--all': null, '--max-count': 100});
          return log.all;
     },
-
+    fetch: async (folderName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options);
+       await git.fetch();
+    },
     showDiff: async (folderName) => {
       const options = {
         baseDir: folderName,
@@ -93,7 +101,8 @@ contextBridge.exposeInMainWorld('fileWatcherAPI', {
       const chokidar = require('chokidar');
       const watcher = chokidar.watch(folderName, {
         ignoreInitial: true,
-        ignored: ['/node_modules/']// todo extend with .gitignore
+        ignored: ['/node_modules/'], // todo extend with .gitignore
+        persistent: true
       })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
