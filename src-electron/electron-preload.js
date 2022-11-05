@@ -30,7 +30,16 @@
        const git = simpleGit(options);
        return await git.diff()         
     },
-
+    showCommitInfoLines: async (folderName, commitHash) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options);
+       const commitInfo = await git.show(commitHash);
+       return commitInfo.split('\n')
+    },
     getCurrentDiffLines: async (folderName) => {
       const options = {
         baseDir: folderName,

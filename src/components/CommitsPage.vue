@@ -233,7 +233,9 @@ export default defineComponent({
       };
     },
     formatCommitDate(date: string): string {
-      return formatDistance(parseISO(date), new Date(), { addSuffix: true });
+      return date == ''
+        ? ''
+        : formatDistance(parseISO(date), new Date(), { addSuffix: true });
     },
     async fetch() {
       if (!this.currentFolderName) return;
@@ -243,9 +245,19 @@ export default defineComponent({
     async updateCommitsHistory(): Promise<boolean> {
       this.commitsHistoryLoading = true;
       try {
-        this.commits = await window.gitAPI.loadCommitHistory(
+        const commitChangesHeader = {
+          hash: '',
+          message: 'Commit Changes',
+          date: '',
+          refs: '',
+          body: '',
+          author_name: '',
+          author_email: '',
+        } as CommitRow;
+        const commitHistory = await window.gitAPI.loadCommitHistory(
           this.currentFolderName
         );
+        this.commits = [commitChangesHeader].concat(commitHistory);
       } catch (err) {
         Notify.create('There is no repository with such path');
         this.commitsHistoryLoading = false;
