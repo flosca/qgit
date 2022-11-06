@@ -12,4 +12,6 @@ export interface IGitApi {
   commit(folderName: string, message: string): Promise<void>
   showCurrentBranchName(folderName: string): Promise<string>
   listAllBranches(folderName: string): Promise<string[]>
+  getGitUsername(): Promise<string>
+  setGitUsername(userName: string): Promise<void>
 }

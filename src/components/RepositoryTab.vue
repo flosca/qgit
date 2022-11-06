@@ -19,9 +19,8 @@
       </div>
       <div class="row">
         <span v-if="currentFolderName !== ''">
-          Current branch is: {{ currentBranchName }}</span
+          You are on: {{ currentBranchName }}</span
         >
-        <!-- <q-select dense outlined :options="allBranches" label="Outlined" /> -->
       </div>
       <div
         class="q-pa-xs q-gutter-sm"
@@ -159,14 +158,13 @@ declare global {
 }
 
 export default defineComponent({
-  name: 'CommitsPage',
+  name: 'RepositoryTab',
   props: {
     title: {
       type: String,
       required: true,
     },
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data(): {
     folderName: string;
     currentFolderName: string;
