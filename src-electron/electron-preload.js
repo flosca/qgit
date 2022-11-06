@@ -9,7 +9,8 @@
           maxConcurrentProcesses: 6,
          };  
          const git = simpleGit(options);
-         const log = await git.log({'--all': null, '--max-count': 100});
+         const log = await git.log({'--all': null, '--max-count': 1000});
+         console.log(log);
          return log.all;
     },
     fetch: async (folderName) => {
@@ -21,6 +22,24 @@
        const git = simpleGit(options);
        await git.fetch();
     },
+    checkoutCommit: async (folderName, hash) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options);
+       await git.checkout(hash);
+    },
+    checkoutBranch: async (folderName, branchName) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options);
+       await git.checkout(branchName);
+    },        
     showDiff: async (folderName) => {
       const options = {
         baseDir: folderName,

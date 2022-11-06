@@ -43,10 +43,47 @@
           flat
           elevation="0"
         >
+          <template v-slot:body-cell="props">
+            <q-td :props="props">
+              {{ props.value }}
+            </q-td>
+            <q-menu touch-position context-menu>
+              <q-list dense style="min-width: 100px">
+                <q-item v-if="props.row.refs !== ''" clickable>
+                  <q-item-section>Checkout to branch...</q-item-section>
+                  <q-item-section side>
+                    <q-icon name="keyboard_arrow_right" />
+                  </q-item-section>
+                  <q-menu anchor="top end" self="top start">
+                    <q-list>
+                      <q-item
+                        v-for="name in parseBranchNames(props.row.refs)"
+                        :key="name"
+                        dense
+                        clickable
+                        v-close-popup
+                        @click="checkoutBranch(name)"
+                      >
+                        <q-item-section>{{ name }}</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-item>
+                <q-item
+                  v-if="props.row.hash !== ''"
+                  clickable
+                  v-close-popup
+                  @click="checkoutCommit(props.row.hash)"
+                >
+                  <q-item-section>Checkout to this commit</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </template>
           <template v-slot:body-cell-refs="props">
             <q-td :props="props">
               <div v-if="!!props.value">
-                <q-chip color="green" size="xs" :label="props.value">
+                <q-chip color="green" size="sm" :label="props.value">
                   <q-tooltip :offset="[10, 10]">
                     {{ props.value }}
                   </q-tooltip>
@@ -242,6 +279,14 @@ export default defineComponent({
       await window.gitAPI.fetch(this.currentFolderName);
       await this.updateCommitsHistory();
     },
+    async checkoutCommit(commitHash: string) {
+      await window.gitAPI.checkoutCommit(this.currentFolderName, commitHash);
+      this.updateCommitsHistory();
+    },
+    async checkoutBranch(branchName: string) {
+      await window.gitAPI.checkoutBranch(this.currentFolderName, branchName);
+      this.updateCommitsHistory();
+    },
     async updateCommitsHistory(): Promise<boolean> {
       this.commitsHistoryLoading = true;
       try {
@@ -258,6 +303,12 @@ export default defineComponent({
           this.currentFolderName
         );
         this.commits = [commitChangesHeader].concat(commitHistory);
+        this.currentBranchName = await window.gitAPI.showCurrentBranchName(
+          this.currentFolderName
+        );
+        this.allBranches = await window.gitAPI.listAllBranches(
+          this.currentFolderName
+        );
       } catch (err) {
         Notify.create('There is no repository with such path');
         this.commitsHistoryLoading = false;
@@ -291,12 +342,6 @@ export default defineComponent({
 
       if (!(await this.updateCommitsHistory())) return;
 
-      this.currentBranchName = await window.gitAPI.showCurrentBranchName(
-        this.currentFolderName
-      );
-      this.allBranches = await window.gitAPI.listAllBranches(
-        this.currentFolderName
-      );
       if (this.folderName === '' && this.currentFolderName !== '')
         this.folderName = this.currentFolderName;
       await this.setCurrentDiff();
@@ -314,6 +359,9 @@ export default defineComponent({
     async resetAllFiles(): Promise<void> {
       await window.gitAPI.resetAllFiles(this.currentFolderName);
       await this.setCurrentDiff();
+    },
+    parseBranchNames(refs: string): string[] {
+      return refs.split(', ').map((branch) => branch.replace('HEAD -> ', ''));
     },
   },
   computed: {
