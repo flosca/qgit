@@ -66,9 +66,18 @@
        };  
        const git = simpleGit(options);
        const diff = await git.diff();
-       return diff.split('\n')
+       return diff.split('\n').filter((line) => line !== '')
     },
-
+    getCommitInfoLines: async (folderName, hash) => {
+      const options = {
+        baseDir: folderName,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+       };  
+       const git = simpleGit(options);
+       const diff = await git.show(hash);
+       return diff.split('\n').filter((line) => line !== '')
+    },   
     stageAllFiles: async (folderName) => {
       const options = {
         baseDir: folderName,

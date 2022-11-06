@@ -40,6 +40,7 @@
           v-model:pagination="pagination"
           :rows-per-page-options="[0]"
           flat
+          @row-click="onRowClick"
           elevation="0"
         >
           <template v-slot:body-cell="props">
@@ -105,7 +106,16 @@
     </div>
     <div class="col-grow">
       <q-card flat>
-        <div class="column">
+        <div v-if="showCommitSummary" class="column">
+          <div class="col-8">
+            <q-scroll-area style="height: 60vh; width: 40vw">
+              <div v-for="line in currentCommitSummaryLines" :key="line.id">
+                <div :style="line.style">{{ line.value }}</div>
+              </div>
+            </q-scroll-area>
+          </div>
+        </div>
+        <div v-else class="column">
           <div class="col">
             <q-input v-model="commitMessage" label="Commit Message" />
             <q-btn
@@ -118,13 +128,13 @@
             />
           </div>
           <div class="col-8">
-            <q-scroll-area style="height: 60vh; width: 40vw">
+            <q-scroll-area style="height: 65vh; width: 40vw">
               <div v-for="line in currentDiffLines" :key="line.id">
                 <div :style="line.style">{{ line.value }}</div>
               </div>
             </q-scroll-area>
             <q-btn
-              v-if="currentDiff !== ''"
+              v-if="currentDiffLines && currentDiffLines.length > 0"
               color="grey"
               outline
               no-caps
@@ -169,13 +179,13 @@ export default defineComponent({
     folderName: string;
     currentFolderName: string;
     commitMessage: string;
-    currentDiff: string;
     currentDiffLines: DiffLine[];
-    hasStagedFiles: boolean;
+    currentCommitSummaryLines: DiffLine[];
     currentBranchName: string;
     allBranches: string[];
     commits: CommitRow[];
     commitsHistoryLoading: boolean;
+    showCommitSummary: boolean;
     columns: TableColumn[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pagination: any;
@@ -184,13 +194,13 @@ export default defineComponent({
       folderName: '',
       currentFolderName: '',
       commitMessage: '',
-      currentDiff: '',
       currentDiffLines: [],
-      hasStagedFiles: false,
+      currentCommitSummaryLines: [],
       currentBranchName: '',
       allBranches: [],
       commits: [],
       commitsHistoryLoading: false,
+      showCommitSummary: false,
       columns: [
         {
           name: 'refs',
@@ -317,14 +327,21 @@ export default defineComponent({
       return true;
     },
     async setCurrentDiff() {
-      const diff = await window.gitAPI.showDiff(this.currentFolderName);
-      this.currentDiff = diff.replace(/(?:\r\n|\r|\n)/g, '<br/>');
-
       const diffLines = await window.gitAPI.getCurrentDiffLines(
         this.currentFolderName
       );
       this.currentDiffLines =
         diffLines?.map((line, i) => this.formatDiffLine(i, line)) ?? [];
+      this.showCommitSummary = false;
+    },
+    async setCommitInfo(hash: string) {
+      const diffLines = await window.gitAPI.getCommitInfoLines(
+        this.currentFolderName,
+        hash
+      );
+      this.currentCommitSummaryLines =
+        diffLines?.map((line, i) => this.formatDiffLine(i, line)) ?? [];
+      this.showCommitSummary = true;
     },
     async openRepository(): Promise<void> {
       if (this.currentFolderName === '' && this.folderName === '') return;
@@ -361,10 +378,18 @@ export default defineComponent({
     parseBranchNames(refs: string): string[] {
       return refs.split(', ').map((branch) => branch.replace('HEAD -> ', ''));
     },
+    async onRowClick(_event: unknown, row: CommitRow) {
+      if (row.hash === '') {
+        this.showCommitSummary = false;
+        this.currentCommitSummaryLines = [];
+        return;
+      }
+      await this.setCommitInfo(row.hash);
+    },
   },
   computed: {
     canCommit(): boolean {
-      return this.commitMessage !== '' && this.currentDiff !== '';
+      return this.commitMessage !== '' && this.currentDiffLines !== [];
     },
     ...mapWritableState(useRepositoryPathStore, ['path']),
   },
