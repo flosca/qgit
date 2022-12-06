@@ -3,3 +3,4 @@ export type DiffLine = {
     value: string,
     style: string,
 }
+

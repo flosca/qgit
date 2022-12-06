@@ -1,6 +1,24 @@
  import { contextBridge } from 'electron'
  import simpleGit from 'simple-git';
 
+
+ async function handleGitResponse(action) {
+  try {
+    await action
+    return {
+     success: true,
+     errorMessage: null
+    }
+  }
+  catch (e) {
+   return {
+     success: false,
+     errorMessage: e.message
+    }
+  }
+
+ }
+
  contextBridge.exposeInMainWorld('gitAPI', {
     loadCommitHistory: async (folderName) => {
       const options = {
@@ -19,7 +37,7 @@
         maxConcurrentProcesses: 6,
        };  
        const git = simpleGit(options);
-       await git.fetch();
+       return await handleGitResponse(await git.fetch());
     },
     checkoutCommit: async (folderName, hash) => {
       const options = {
@@ -28,7 +46,7 @@
         maxConcurrentProcesses: 6,
        };  
        const git = simpleGit(options);
-       await git.checkout(hash);
+       return await handleGitResponse(git.checkout(hash));
     },
     checkoutBranch: async (folderName, branchName) => {
       const options = {
@@ -37,7 +55,7 @@
         maxConcurrentProcesses: 6,
        };  
        const git = simpleGit(options);
-       await git.checkout(branchName);
+       return await handleGitResponse(git.checkout(branchName));
     },        
     showDiff: async (folderName) => {
       const options = {
@@ -53,7 +71,7 @@
         baseDir: folderName,
         binary: 'git',
         maxConcurrentProcesses: 6,
-       };  
+       };
        const git = simpleGit(options);
        const commitInfo = await git.show(commitHash);
        return commitInfo.split('\n')
@@ -95,7 +113,7 @@
         maxConcurrentProcesses: 6,
        };  
        const git = simpleGit(options);
-       return await git.reset(['--hard']) 
+       return await handleGitResponse(git.reset(['--hard'])); 
     },    
 
     commit: async (folderName, message) => {
@@ -105,9 +123,8 @@
         maxConcurrentProcesses: 6,
        };  
        const git = simpleGit(options);
-       await git.commit(message, {
-        '--all': null
-      });
+       return await handleGitResponse(await git.commit(message, {
+        '--all': null}));
     },
 
     showCurrentBranchName: async (folderName) => {
@@ -139,7 +156,6 @@
        };  
        const git = simpleGit(options);
        const config = await git.getConfig('user.name', 'global')
-       console.log('kek', config)
        return config.value;
     },
     setGitUsername: async (userName) => {

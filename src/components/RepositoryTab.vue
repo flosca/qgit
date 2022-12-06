@@ -26,9 +26,9 @@
         class="q-pa-xs q-gutter-sm"
         v-if="currentFolderName !== '' && currentFolderName === folderName"
       >
-        <q-btn flat color="primary" no-caps label="Fetch" @click="fetch" />
-        <q-btn flat color="primary" no-caps label="Change branch" disable />
-        <q-btn flat color="primary" no-caps label="Manage stash" disable />
+        <q-btn color="primary" no-caps outline label="Fetch" @click="fetch" />
+        <!-- <q-btn flat color="primary" no-caps label="Change branch" disable />
+        <q-btn flat color="primary" no-caps label="Manage stash" disable /> -->
       </div>
       <q-scroll-area style="height: 70vh; width: 55vw">
         <q-table
@@ -101,6 +101,26 @@
               </div>
             </q-td>
           </template>
+          <template v-slot:body-cell-date="props">
+            <q-td :props="props">
+              <div v-if="!!props.value">
+                {{ formatCommitDate(props.value) }}
+                <q-tooltip :offset="[10, 10]">
+                  {{ props.value }}
+                </q-tooltip>
+              </div>
+            </q-td>
+          </template>
+          <template v-slot:body-cell-hash="props">
+            <q-td :props="props">
+              <div v-if="!!props.value">
+                {{ formatHash(props.value) }}
+                <q-tooltip :offset="[10, 10]">
+                  {{ props.value }}
+                </q-tooltip>
+              </div>
+            </q-td>
+          </template>
         </q-table>
       </q-scroll-area>
     </div>
@@ -159,6 +179,7 @@ import { TableColumn } from 'src/models/tableColumn';
 import { DiffLine } from 'src/models/diffLine';
 import { CommitRow } from 'src/models/commitRow';
 import { Notify } from 'quasar';
+import { GitResponse } from 'src/models/gitResponse';
 
 declare global {
   interface Window {
@@ -225,9 +246,6 @@ export default defineComponent({
           field: 'date',
           style: 'max-width: 100px',
           headerStyle: 'max-width: 100px',
-          format: (val: string) => {
-            return this.formatCommitDate(val);
-          },
         },
         {
           name: 'hash',
@@ -235,7 +253,6 @@ export default defineComponent({
           field: 'hash',
           style: 'max-width: 50px',
           headerStyle: 'max-width: 50px',
-          format: (val: string) => val.substring(0, 7),
         },
         {
           name: 'author_name',
@@ -252,10 +269,15 @@ export default defineComponent({
   },
   mounted: async function () {
     this.currentFolderName = this.path ?? '';
-    console.log(this.currentFolderName);
     if (this.currentFolderName !== '') await this.openRepository();
   },
   methods: {
+    async handleGitResponse(response: GitResponse, onSuccess: Promise<void> | Promise<boolean>) {
+      if (response.success) 
+        await onSuccess
+      else
+        Notify.create(response.errorMessage || 'System error');
+    },
     getDiffLineStyle(line: string): string {
       const lineColours = new Map<string, string>([
         ['+', 'green'],
@@ -278,9 +300,12 @@ export default defineComponent({
       };
     },
     formatCommitDate(date: string): string {
-      return date == ''
+      return date === ''
         ? ''
         : formatDistance(parseISO(date), new Date(), { addSuffix: true });
+    },
+    formatHash(hash: string): string {
+      return hash === '' ? '' : hash.substring(0, 7);
     },
     async fetch() {
       if (!this.currentFolderName) return;
@@ -288,12 +313,12 @@ export default defineComponent({
       await this.updateCommitsHistory();
     },
     async checkoutCommit(commitHash: string) {
-      await window.gitAPI.checkoutCommit(this.currentFolderName, commitHash);
-      this.updateCommitsHistory();
+      const response = await window.gitAPI.checkoutCommit(this.currentFolderName, commitHash);
+      await this.handleGitResponse(response, this.updateCommitsHistory())
     },
     async checkoutBranch(branchName: string) {
-      await window.gitAPI.checkoutBranch(this.currentFolderName, branchName);
-      this.updateCommitsHistory();
+      const response = await window.gitAPI.checkoutBranch(this.currentFolderName, branchName);
+      await this.handleGitResponse(response, this.updateCommitsHistory())
     },
     async updateCommitsHistory(): Promise<boolean> {
       this.commitsHistoryLoading = true;
